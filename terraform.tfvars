@@ -1,3 +1,3 @@
 location = "Australia East"
-resource_group_name = "example-resource-group12"
+resource_group_name = "example-resource-group13"
 
