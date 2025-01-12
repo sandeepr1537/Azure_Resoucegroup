@@ -1,45 +1,42 @@
-trigger:
-- main  # Adjust the branch name as per your repository setup
+name: Deploy Resource Group to Azure using Terraform
 
-variables:
-  azureSubscription: 'your-service-connection'  # Name of the service connection to Azure
-  location: 'Australia East'  # Location for the resource group
-  resourceGroupName: 'example-resource-group'  # Name of the resource group
+on:
+  push:
+    branches:
+      - main  # Trigger the workflow on pushes to the main branch (change as needed)
 
-stages:
-- stage: Deploy
-  jobs:
-  - job: TerraformDeployment
-    displayName: 'Deploy Azure Resource Group using Terraform'
-    pool:
-      vmImage: 'ubuntu-latest'
+jobs:
+  terraform:
+    name: Deploy Resource Group using Terraform
+    runs-on: ubuntu-latest
+
     steps:
-    - task: UseTerraform@0
-      displayName: 'Install Terraform'
-      inputs:
-        terraformVersion: '1.5.x'  # Adjust the version of Terraform you want to use
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-    - task: TerraformInstaller@0
-      displayName: 'Install Terraform'
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.4.0  # Specify the Terraform version you want to use
 
-    - checkout: self  # Checkout the repository containing Terraform files
+    - name: Set up Azure CLI
+      uses: azure/setup-azurecli@v1
+      with:
+        azure-cli-version: '2.28.0'  # You can specify your Azure CLI version here
 
-    - script: |
-        terraform init
-        terraform plan -out=tfplan
-      displayName: 'Terraform Init and Plan'
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}  # Use the Azure credentials stored as a GitHub secret
 
-    - script: |
-        terraform apply -auto-approve
-      displayName: 'Terraform Apply'
-      env:
-        ARM_CLIENT_ID: $(servicePrincipalClientId)  # Set up in Azure DevOps pipeline secrets
-        ARM_CLIENT_SECRET: $(servicePrincipalClientSecret)  # Set up in Azure DevOps pipeline secrets
-        ARM_SUBSCRIPTION_ID: $(azureSubscriptionId)  # Set up in Azure DevOps pipeline secrets
-        ARM_TENANT_ID: $(azureTenantId)  # Set up in Azure DevOps pipeline secrets
+    - name: Initialize Terraform
+      run: terraform init
 
-    - task: PublishBuildArtifacts@1
-      displayName: 'Publish Terraform Plan as Artifact'
-      inputs:
-        artifactName: 'terraform-plan'
-        publishLocation: 'Container'
+    - name: Validate Terraform
+      run: terraform validate
+
+    - name: Plan Terraform deployment
+      run: terraform plan
+
+    - name: Apply Terraform deployment
+      run: terraform apply -auto-approve
