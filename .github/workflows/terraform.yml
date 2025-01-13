@@ -1,6 +1,8 @@
 name: Deploy Resource Group to Azure using Terraform
 
 on:
+#To trigger the workflow manually in GitHub Actions, you can use the workflow_dispatch event instead of the push event.
+#workflow_dispatch:  # Trigger the workflow manually from the GitHub UI
   push:
     branches:
       - main  # Trigger the workflow on pushes to the main branch (change as needed)
