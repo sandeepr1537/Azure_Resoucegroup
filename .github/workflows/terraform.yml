@@ -38,5 +38,5 @@ jobs:
       run: terraform plan
 
     - name: Apply Terraform deployment
-      run: terraform destroy -auto-approve
+      run: terraform apply -auto-approve
 
